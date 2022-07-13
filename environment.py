@@ -15,7 +15,7 @@ class Environment:
 
     def update_agents(self):
         for i in self.agents:
-            i.update()
+            i.update_position()
 
     def initialise_environment(self):
         pg.init()
