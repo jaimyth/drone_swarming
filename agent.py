@@ -9,26 +9,24 @@ class Agent:
         self.dt = constants.dt
         self.x = x
         self.y = y
+        self.x_init = x
+        self.y_init = y
         self.x_hist = [x, x]
         self.y_hist = [y, y]
 
         self.v =np.array([0,0])
         self.command_v = 0
 
-        self.vx = 0
-        self.vy = 0
 
         self.id = id    #unique id to identify each agent
 
     def update_velocity(self):
         from constants import v_factor
         self.v = (1-v_factor)*self.v + v_factor*self.command_v
-        self.vx = self.v[0]
-        self.vy = self.v[1]
 
     def update_position(self):
-        self.x += self.dt * self.vx
-        self.y += self.dt * self.vy
+        self.x += self.dt * self.v[0]
+        self.y += self.dt * self.v[1]
         # if self.id == 10:
         #     print(f'{self.x, self.y}, id = {self.id}')
         self.x_hist.append(self.x)
@@ -75,8 +73,9 @@ class Agent:
         return centroid
 
     def draw(self, screen):
-        pg.draw.circle(screen, self.color, [int(self.x), int(self.y)],
-                       5, 0)
+        from constants import size_agents
+        pg.draw.circle(screen, self.color, [int(round(self.x,0)), int(round(self.y,0))],
+                       size_agents, 0)
 
     def draw_history(self, screen):
         hist = list(zip(self.x_hist,self.y_hist))
@@ -84,3 +83,10 @@ class Agent:
 
     def draw_desv(self, screen):
         pg.draw.line(screen, (255,255,255), self.position(), self.position()+(self.command_v*2).astype(int))
+
+    def reset(self):
+        self.x = self.x_init
+        self.y = self.y_init
+        self.v = np.array([0,0])
+        self.x_hist = [self.x, self.x]
+        self.y_hist = [self.y, self.y]

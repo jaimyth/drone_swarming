@@ -7,6 +7,7 @@ class Environment:
         self.width = width
         self.height = height
         self.agents = []
+        self.leader = None
         self.bg_color = bg_color
         self.screen = self.initialise_environment()
 
