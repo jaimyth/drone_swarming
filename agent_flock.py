@@ -51,7 +51,7 @@ class Agent_Flock(Agent):
         return follow_pos
 
     def goto_ppoint(self):
-        closest_dist = 1000
+        closest_dist = 10000
         for ppoint in self.environment.ppoints:
             dx = ppoint.x - self.x
             dy = ppoint.y - self.y
@@ -63,8 +63,15 @@ class Agent_Flock(Agent):
         vect = vect / np.linalg.norm(vect)
         return vect
 
-    def final_v(self, cohese=True, avoid=True, align=True, follow=False, go_point=False):
-        from constants import w_cohesion, w_avoidance, w_alignment, w_follow, w_gopoint
+    def goto_line(self):
+        line = self.environment.line
+        p_line = (self.x + line.a*(self.y - line.b))/(1+line.a**2)*np.array([1, line.a])+ np.array([0, line.b])
+        vect = p_line-self.position()
+        return vect / np.linalg.norm(vect)
+
+
+    def final_v(self, cohese=True, avoid=True, align=True, follow=False, go_point=False, go_line=False):
+        from constants import w_cohesion, w_avoidance, w_alignment, w_follow, w_gopoint, w_goline
         from constants import k, avoidance_radius
         neighbors, distances = self.sense_neighbors(k)
         self.command_v = 0
@@ -84,3 +91,5 @@ class Agent_Flock(Agent):
             self.command_v = self.command_v + self.follow_leader()*w_follow
         if go_point:
             self.command_v = self.command_v + self.goto_ppoint()*w_gopoint
+        if go_line:
+            self.command_v = self.command_v + self.goto_line()*w_goline

@@ -84,9 +84,13 @@ class Agent:
     def draw_desv(self, screen):
         pg.draw.line(screen, (255,255,255), self.position(), self.position()+(self.command_v*2).astype(int))
 
-    def reset(self):
+    def reset_position(self):
         self.x = self.x_init
         self.y = self.y_init
         self.v = np.array([0,0])
+        self.x_hist = [self.x, self.x]
+        self.y_hist = [self.y, self.y]
+
+    def reset_history(self):
         self.x_hist = [self.x, self.x]
         self.y_hist = [self.y, self.y]

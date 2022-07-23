@@ -8,6 +8,7 @@ class Environment:
         self.height = height
         self.agents = []
         self.ppoints = []
+        self.line = None
         self.leader = None
         self.bg_color = bg_color
         self.screen = self.initialise_environment()
