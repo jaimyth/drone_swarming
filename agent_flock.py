@@ -50,8 +50,21 @@ class Agent_Flock(Agent):
         follow_pos = delta_pos / np.linalg.norm(delta_pos)
         return follow_pos
 
-    def final_v(self, cohese=True, avoid=True, align=True, follow=False):
-        from constants import w_cohesion, w_avoidance, w_alignment, w_follow
+    def goto_ppoint(self):
+        closest_dist = 1000
+        for ppoint in self.environment.ppoints:
+            dx = ppoint.x - self.x
+            dy = ppoint.y - self.y
+            dist = np.sqrt(dx**2+dy**2)
+            if dist < closest_dist:
+                closest_ppoint = ppoint
+                closest_dist = dist
+                vect = ppoint.position() - self.position()
+        vect = vect / np.linalg.norm(vect)
+        return vect
+
+    def final_v(self, cohese=True, avoid=True, align=True, follow=False, go_point=False):
+        from constants import w_cohesion, w_avoidance, w_alignment, w_follow, w_gopoint
         from constants import k, avoidance_radius
         neighbors, distances = self.sense_neighbors(k)
         self.command_v = 0
@@ -68,7 +81,6 @@ class Agent_Flock(Agent):
             neighbors_align = neighbors
             self.command_v = self.command_v + self.alignment(neighbors_align)*w_alignment
         if follow:
-            #print(1, self.command_v)
             self.command_v = self.command_v + self.follow_leader()*w_follow
-            #print(2, self.command_v)
-
+        if go_point:
+            self.command_v = self.command_v + self.goto_ppoint()*w_gopoint
