@@ -17,9 +17,9 @@ env.update_environment()
 
 random.seed(2)
 
-n = 11
+n = 18
 x_pos = 200
-y_pos = np.linspace(200,550, n)
+y_pos = np.linspace(200,600, n)
 
 
 
@@ -33,32 +33,53 @@ cohese = False
 go_point = False
 go_line = False
 align = False
+distribute = False
 
-r = 400
-center = np.array([env.width/2, env.height/2])
-point0 = center
+point0 = np.array([400, 400])
+point1 = np.array([500, 500])
+point2 = np.array([701, 401])
+point3 = np.array([501, 351])
+line0 = S_line(env, point0, point1)
+line1 = S_line(env, point1, point2)
+line2 = S_line(env, point2, point3)
+line3 = S_line(env, point3, point0)
+env.lines = [line0, line1, line2, line3]
 
-pp = Ppoint(env, center[0], center[1])
+''''
+point0 = np.array([400, 400])
+point1 = np.array([400, 500])
+point2 = np.array([475, 550])
+point3 = np.array([550, 500])
+point4 = np.array([550, 400])
+point5 = np.array([475, 300])
+
+line0 = S_line(env, point0, point1)
+line1 = S_line(env, point1, point2)
+line2 = S_line(env, point2, point3)
+line3 = S_line(env, point3, point4)
+line4 = S_line(env, point4, point5)
+line5 = S_line(env, point5, point0)
+env.lines = [line0, line1, line2, line3, line4, line5]
+'''
+pp = Ppoint(env, 475, 475)
 env.ppoints = [pp]
+
 kt = 0
 while run:
     t = pg.time.get_ticks()
     kt += 1
-    xcircle = r*np.sin(np.pi*2*kt/360/8)
-    ycircle = r*np.cos(np.pi*2*kt/360/8)
 
-    point1 = center + np.array([xcircle, ycircle])
-
-    sline = S_line(env, point0, point1)
-    env.line = sline
     env.clear_environment()
 
     for i, ag in enumerate(env.agents):
-        ag.final_v(cohese=cohese, avoid=True, align=align, follow=False, go_point=go_point, go_line=go_line)
+        ag.final_v(cohese=cohese, avoid=True, align=align, follow=False, go_point=go_point, go_line=False, go_lines=go_line, distribute=distribute)
         ag.update_velocity()
         ag.update_position()
-        ag.draw_history(env.screen)
-    env.line.draw()
+        #ag.draw_history(env.screen)
+
+ #   for line in env.lines:
+#        line.draw()
+
     env.update_agents()
     env.draw_agents()
     pg.time.delay(int(constants.dt*1000))
@@ -81,4 +102,6 @@ while run:
                 go_line = not go_line
             if event.key == pg.K_a:
                 align = not align
+            if event.key == pg.K_d:
+                distribute = not distribute
     env.update_environment()

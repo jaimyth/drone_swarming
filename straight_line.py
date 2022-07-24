@@ -11,7 +11,7 @@ class S_line:
         self.point0 = point0
         self.point1 = point1
         if self.point0[0] == self.point1[0]:
-            self.point1[0] = self.point0[0]+0.0001
+            self.point1[0] = self.point0[0]+2
         if self.point0[0] > self.point1[0]:
             self.point0 = point1
             self.point1 = point0

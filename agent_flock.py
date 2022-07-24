@@ -75,6 +75,25 @@ class Agent_Flock(Agent):
         vect = vect_b+vect_p
         return vect / np.linalg.norm(vect)
 
+    def goto_lines(self):
+        shortest_dist = 10000
+        for line in self.environment.lines:
+            vect_b = 0
+            if self.position()[0] > line.point1[0]:
+                vect_b = line.point1 - self.position()
+            if self.position()[0] < line.point0[0]:
+                vect_b = line.point0 - self.position()
+            p_line = (self.x + line.a * (self.y - line.b)) / (1 + line.a ** 2) * np.array([1, line.a]) + np.array(
+                [0, line.b])
+            vect_p = p_line - self.position()
+            vect = vect_b + vect_p
+            if np.linalg.norm(vect) < shortest_dist:
+                shortest_dist = np.linalg.norm(vect)
+                shortest_vect = vect
+        if np.linalg.norm(shortest_vect) == 0:
+            return shortest_vect
+        return shortest_vect/np.linalg.norm(shortest_vect)
+
     def avoid_wall(self):
         from constants import wall_threshold
         vect = np.array([0,0])
@@ -95,9 +114,9 @@ class Agent_Flock(Agent):
             vect = vect / np.linalg.norm(vect)
         return vect
 
-    def final_v(self, cohese=True, avoid=True, align=True, follow=False, go_point=False, go_line=False):
-        from constants import w_wall, w_cohesion, w_avoidance, w_alignment, w_follow, w_gopoint, w_goline
-        from constants import k, avoidance_radius
+    def final_v(self, cohese=True, avoid=True, align=True, follow=False, go_point=False, go_line=False, go_lines = False, distribute = False):
+        from constants import w_wall, w_cohesion, w_avoidance, w_distribute, w_alignment, w_follow, w_gopoint, w_goline
+        from constants import k, avoidance_radius, distribute_radius
         neighbors, distances = self.sense_neighbors(k)
         self.command_v = 0
 
@@ -107,10 +126,15 @@ class Agent_Flock(Agent):
             self.command_v = self.command_v + self.cohesion(neighbors_cohese)*w_cohesion
         if avoid:
             neighbors_avoid = []
+            neighbors_distribute = []
             for i in range(len(distances)):
-                if distances[i] < avoidance_radius:
-                    neighbors_avoid.append(neighbors[i])
+                if distances[i] < distribute_radius:
+                    neighbors_distribute.append(neighbors[i])
+                    if distances[i] < avoidance_radius:
+                        neighbors_avoid.append(neighbors[i])
             self.command_v =  self.command_v + self.avoidance(neighbors_avoid)*w_avoidance
+            if distribute:
+                self.command_v = self.command_v + self.avoidance(neighbors_distribute) * w_distribute
         if align:
             neighbors_align = neighbors
             self.command_v = self.command_v + self.alignment(neighbors_align)*w_alignment
@@ -120,3 +144,5 @@ class Agent_Flock(Agent):
             self.command_v = self.command_v + self.goto_ppoint()*w_gopoint
         if go_line:
             self.command_v = self.command_v + self.goto_line()*w_goline
+        if go_lines:
+            self.command_v = self.command_v + self.goto_lines() * w_goline
