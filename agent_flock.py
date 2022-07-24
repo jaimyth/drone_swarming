@@ -75,21 +75,42 @@ class Agent_Flock(Agent):
         vect = vect_b+vect_p
         return vect / np.linalg.norm(vect)
 
+    def avoid_wall(self):
+        from constants import wall_threshold
+        vect = np.array([0,0])
+        avoid = False
+        if self.x < wall_threshold:
+            vect[0] = vect[0]+1
+            avoid = True
+        if self.x > self.environment.width - wall_threshold:
+            vect[0] = vect[0] - 1
+            avoid = True
+        if self.y < wall_threshold:
+            vect[1] = vect[1] + 1
+            avoid = True
+        if self.y > self.environment.height - wall_threshold:
+            vect[1] = vect[1] - 1
+            avoid = True
+        if avoid:
+            vect = vect / np.linalg.norm(vect)
+        return vect
 
     def final_v(self, cohese=True, avoid=True, align=True, follow=False, go_point=False, go_line=False):
-        from constants import w_cohesion, w_avoidance, w_alignment, w_follow, w_gopoint, w_goline
+        from constants import w_wall, w_cohesion, w_avoidance, w_alignment, w_follow, w_gopoint, w_goline
         from constants import k, avoidance_radius
         neighbors, distances = self.sense_neighbors(k)
         self.command_v = 0
+
+        self.command_v = self.command_v +self.avoid_wall()*w_wall
         if cohese:
             neighbors_cohese = neighbors
-            self.command_v += self.cohesion(neighbors_cohese)*w_cohesion
+            self.command_v = self.command_v + self.cohesion(neighbors_cohese)*w_cohesion
         if avoid:
             neighbors_avoid = []
             for i in range(len(distances)):
                 if distances[i] < avoidance_radius:
                     neighbors_avoid.append(neighbors[i])
-            self.command_v += self.avoidance(neighbors_avoid)*w_avoidance
+            self.command_v =  self.command_v + self.avoidance(neighbors_avoid)*w_avoidance
         if align:
             neighbors_align = neighbors
             self.command_v = self.command_v + self.alignment(neighbors_align)*w_alignment

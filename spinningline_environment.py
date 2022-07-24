@@ -8,7 +8,7 @@ from agent_flock import Agent_Flock
 from environment import Environment
 import constants
 from agent_id import *
-width, height = (1200, 700)
+width, height = (800, 600)
 bg_color = (255, 200, 180)
 
 env = Environment(width=width, height=height, bg_color=bg_color)

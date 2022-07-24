@@ -1,6 +1,7 @@
 dt = 0.01
 size_agents = 10
 k = 10
+w_wall = 20
 w_cohesion = 30
 w_avoidance = 150*3
 w_alignment = 40
@@ -10,3 +11,4 @@ w_goline = 40
 v_factor = 0.05
 avoidance_radius = 20
 collision_radius = 12
+wall_threshold = 30
