@@ -65,8 +65,14 @@ class Agent_Flock(Agent):
 
     def goto_line(self):
         line = self.environment.line
+        vect_b = 0
+        if self.position()[0] > line.point1[0]:
+            vect_b = line.point1 - self.position()
+        if self.position()[0] < line.point0[0]:
+            vect_b = line.point0 - self.position()
         p_line = (self.x + line.a*(self.y - line.b))/(1+line.a**2)*np.array([1, line.a])+ np.array([0, line.b])
-        vect = p_line-self.position()
+        vect_p = p_line-self.position()
+        vect = vect_b+vect_p
         return vect / np.linalg.norm(vect)
 
 

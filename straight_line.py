@@ -12,6 +12,10 @@ class S_line:
         self.point1 = point1
         if self.point0[0] == self.point1[0]:
             self.point1[0] = self.point0[0]+0.0001
+        if self.point0[0] > self.point1[0]:
+            self.point0 = point1
+            self.point1 = point0
+
         self.a = (point1[1] - point0[1]) / (point1[0] - point0[0])
         self.b = point0[1] - self.a * point0[0]
         self.x_bounds = np.array([point0[0], point1[0]])

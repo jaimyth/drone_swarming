@@ -57,5 +57,8 @@ while run:
         if event.type == pg.KEYDOWN:
             if event.key == pg.K_r:
                 for i in env.agents:
-                    i.reset()
+                    i.reset_position()
+            if event.key == pg.K_h:
+                for ag in env.agents:
+                    ag.reset_history()
     env.update_environment()

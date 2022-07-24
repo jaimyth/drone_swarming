@@ -34,7 +34,7 @@ go_point = False
 go_line = False
 align = False
 
-r = 200
+r = 400
 center = np.array([env.width/2, env.height/2])
 point0 = center
 
