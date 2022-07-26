@@ -75,23 +75,30 @@ class Agent_Flock(Agent):
         vect = vect_b+vect_p
         return vect / np.linalg.norm(vect)
 
-    def goto_lines(self):
+    def goto_shape(self):
         shortest_dist = 10000
-        for line in self.environment.lines:
+        shortest_vect = None
+        for line in self.environment.shape.lines:
             vect_b = 0
-            if self.position()[0] > line.point1[0]:
-                vect_b = line.point1 - self.position()
-            if self.position()[0] < line.point0[0]:
-                vect_b = line.point0 - self.position()
             p_line = (self.x + line.a * (self.y - line.b)) / (1 + line.a ** 2) * np.array([1, line.a]) + np.array(
                 [0, line.b])
+            if p_line[0] < line.point0[0]:
+                vect_b = line.point0 - self.position()
+            if p_line[0] > line.point1[0]:
+                vect_b = line.point1 - self.position()
             vect_p = p_line - self.position()
             vect = vect_b + vect_p
             if np.linalg.norm(vect) < shortest_dist:
                 shortest_dist = np.linalg.norm(vect)
                 shortest_vect = vect
+                if np.linalg.norm(vect) == 0:
+                    break
         if np.linalg.norm(shortest_vect) == 0:
             return shortest_vect
+        else:
+            vect_c = self.environment.shape.center - self.position()
+            vect_c = vect_c/np.linalg.norm(vect_c)
+            shortest_vect = shortest_vect# + vect_c/1000
         return shortest_vect/np.linalg.norm(shortest_vect)
 
     def avoid_wall(self):
@@ -114,7 +121,7 @@ class Agent_Flock(Agent):
             vect = vect / np.linalg.norm(vect)
         return vect
 
-    def final_v(self, cohese=True, avoid=True, align=True, follow=False, go_point=False, go_line=False, go_lines = False, distribute = False):
+    def final_v(self, cohese=True, avoid=True, align=True, follow=False, go_point=False, go_line=False, go_shape = False, distribute = False):
         from constants import w_wall, w_cohesion, w_avoidance, w_distribute, w_alignment, w_follow, w_gopoint, w_goline
         from constants import k, avoidance_radius, distribute_radius
         neighbors, distances = self.sense_neighbors(k)
@@ -144,5 +151,5 @@ class Agent_Flock(Agent):
             self.command_v = self.command_v + self.goto_ppoint()*w_gopoint
         if go_line:
             self.command_v = self.command_v + self.goto_line()*w_goline
-        if go_lines:
-            self.command_v = self.command_v + self.goto_lines() * w_goline
+        if go_shape:
+            self.command_v = self.command_v + self.goto_shape() * w_goline

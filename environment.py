@@ -10,6 +10,7 @@ class Environment:
         self.ppoints = []
         self.line = None
         self.lines = []
+        self.shape = None
         self.leader = None
         self.bg_color = bg_color
         self.screen = self.initialise_environment()
@@ -39,3 +40,6 @@ class Environment:
     def draw_agents(self):
         for i in self.agents:
             i.draw(self.screen)
+
+    def draw_shape(self):
+        self.shape.draw_shape()

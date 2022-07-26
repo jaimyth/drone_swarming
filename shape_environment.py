@@ -4,6 +4,7 @@ import numpy as np
 from agent import Agent
 from ppoint import Ppoint
 from straight_line import S_line
+from shape import Shape, create_polygon_points
 from agent_flock import Agent_Flock
 from environment import Environment
 import constants
@@ -17,9 +18,9 @@ env.update_environment()
 
 random.seed(2)
 
-n = 18
+n = 23
 x_pos = 200
-y_pos = np.linspace(200,600, n)
+y_pos = np.linspace(200,800, n)
 
 
 
@@ -35,50 +36,36 @@ go_line = False
 align = False
 distribute = False
 
-point0 = np.array([400, 400])
-point1 = np.array([500, 500])
-point2 = np.array([701, 401])
-point3 = np.array([501, 351])
-line0 = S_line(env, point0, point1)
-line1 = S_line(env, point1, point2)
-line2 = S_line(env, point2, point3)
-line3 = S_line(env, point3, point0)
-env.lines = [line0, line1, line2, line3]
+n_polygon = 4
+square_points = create_polygon_points(n_polygon, 130, (400, 400))
+square = Shape(env, square_points)
+env.shape = square
 
-''''
-point0 = np.array([400, 400])
-point1 = np.array([400, 500])
-point2 = np.array([475, 550])
-point3 = np.array([550, 500])
-point4 = np.array([550, 400])
-point5 = np.array([475, 300])
-
-line0 = S_line(env, point0, point1)
-line1 = S_line(env, point1, point2)
-line2 = S_line(env, point2, point3)
-line3 = S_line(env, point3, point4)
-line4 = S_line(env, point4, point5)
-line5 = S_line(env, point5, point0)
-env.lines = [line0, line1, line2, line3, line4, line5]
-'''
 pp = Ppoint(env, 475, 475)
 env.ppoints = [pp]
 
 kt = 0
+polygon_update = False
+
 while run:
     t = pg.time.get_ticks()
     kt += 1
 
+    if polygon_update:
+        points = create_polygon_points(n_polygon, 130, (400, 400))
+        shape = Shape(env, points)
+        env.shape = shape
+        polygon_update=False
+
     env.clear_environment()
 
     for i, ag in enumerate(env.agents):
-        ag.final_v(cohese=cohese, avoid=True, align=align, follow=False, go_point=go_point, go_line=False, go_lines=go_line, distribute=distribute)
+        ag.final_v(cohese=cohese, avoid=True, align=align, follow=False, go_point=go_point, go_line=False, go_shape=go_line, distribute=distribute)
         ag.update_velocity()
         ag.update_position()
         #ag.draw_history(env.screen)
 
-    for line in env.lines:
-        line.draw()
+    env.shape.draw_shape()
 
     env.update_agents()
     env.draw_agents()
@@ -104,4 +91,7 @@ while run:
                 align = not align
             if event.key == pg.K_d:
                 distribute = not distribute
+            if event.key == pg.K_UP:
+                n_polygon += 1
+                polygon_update = True
     env.update_environment()
