@@ -18,7 +18,7 @@ env.update_environment()
 
 random.seed(2)
 
-n = 23
+n = 30
 x_pos = 200
 y_pos = np.linspace(200,800, n)
 
@@ -35,6 +35,7 @@ go_point = False
 go_line = False
 align = False
 distribute = False
+center = False
 
 n_polygon = 4
 square_points = create_polygon_points(n_polygon, 130, (400, 400))
@@ -60,11 +61,14 @@ while run:
     env.clear_environment()
 
     for i, ag in enumerate(env.agents):
-        ag.final_v(cohese=cohese, avoid=True, align=align, follow=False, go_point=go_point, go_line=False, go_shape=go_line, distribute=distribute)
+        ag.final_v(cohese=cohese, avoid=True, align=align, follow=False, go_point=go_point, go_line=False, go_shape=go_line, distribute=distribute, center=center)
         ag.update_velocity()
         ag.update_position()
-        #ag.draw_history(env.screen)
 
+        #ag.draw_history(env.screen)
+    centroid = env.agents[0].centroid_neighbors(env.agents[0].sense_neighbors(15)[0])
+    pg.draw.circle(env.screen, (0, 0, 255), centroid.astype(int),
+                   5, 0)
     env.shape.draw_shape()
 
     env.update_agents()
@@ -83,15 +87,26 @@ while run:
 
             if event.key == pg.K_c:
                 cohese = not cohese
+                print(f'Cohese {cohese}')
             if event.key == pg.K_p:
                 go_point = not go_point
+                print(f'Go point {go_point}')
             if event.key == pg.K_l:
                 go_line = not go_line
+                print(f'Go line {go_line}')
             if event.key == pg.K_a:
                 align = not align
+                print(f'Align {align}')
             if event.key == pg.K_d:
                 distribute = not distribute
+                print(f'Distribute {distribute}')
+            if event.key == pg.K_m:
+                center = not center
+                print(f'Center {center}')
             if event.key == pg.K_UP:
                 n_polygon += 1
+                polygon_update = True
+            if event.key == pg.K_DOWN:
+                n_polygon -= 1
                 polygon_update = True
     env.update_environment()
