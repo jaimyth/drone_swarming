@@ -27,7 +27,6 @@ xx, yy = np.meshgrid(x_pos, y_pos)
 
 
 for i in range(n):
-    #ag = Agent_Flock(environment=env, x = random.randint(150, 250), y = random.randint(150, 250), id=get_id())
     ag = Agent_Flock(environment=env, x = xx.flatten()[i], y =yy.flatten()[i], id=get_id())
     env.add_agent(ag)
 
@@ -38,8 +37,11 @@ go_line = False
 align = False
 distribute = False
 center = False
+spiral = False
 
 n_polygon = 4
+n_petal = 0
+n_petal_old = 3
 square_points = create_polygon_points(n_polygon, 130, (400, 400))
 square = Shape(env, square_points)
 env.shape = square
@@ -61,9 +63,10 @@ while run:
         polygon_update=False
 
     env.clear_environment()
-
+    env.global_centroid = env.calculate_global_centroid()
     for i, ag in enumerate(env.agents):
-        ag.final_v(cohese=cohese, avoid=True, align=align, follow=False, go_point=go_point, go_line=False, go_shape=go_line, distribute=distribute, center=center)
+        ag.final_v(cohese=cohese, avoid=True, align=align, follow=False, go_point=go_point, go_line=False,
+                   go_shape=go_line, distribute=distribute, center=center, n_petal = n_petal)
         ag.update_velocity()
         ag.update_position()
 
@@ -71,7 +74,7 @@ while run:
     centroid = env.agents[0].centroid_neighbors(env.agents[0].sense_neighbors(100)[0])
     pg.draw.circle(env.screen, (0, 0, 255), centroid.astype(int),
                    5, 0)
-    env.shape.draw_shape()
+    #env.shape.draw_shape()
 
     env.update_agents()
     env.draw_agents()
@@ -105,10 +108,17 @@ while run:
             if event.key == pg.K_m:
                 center = not center
                 print(f'Center {center}')
+            if event.key == pg.K_f:
+                if n_petal == 0:
+                    n_petal = n_petal_old
+                    print(f'Flower True {n_petal}')
+                else:
+                    n_petal_old = n_petal
+                    n_petal = 0
+                    print(f'Flower False')
+
             if event.key == pg.K_UP:
-                n_polygon += 1
-                polygon_update = True
+                n_petal += 1
             if event.key == pg.K_DOWN:
-                n_polygon -= 1
-                polygon_update = True
+                n_petal -= 1
     env.update_environment()

@@ -14,6 +14,7 @@ class Environment:
         self.leader = None
         self.bg_color = bg_color
         self.screen = self.initialise_environment()
+        self.global_centroid = 0
 
     def add_agent(self, agent):
         self.agents.append(agent)
@@ -43,3 +44,11 @@ class Environment:
 
     def draw_shape(self):
         self.shape.draw_shape()
+
+    def calculate_global_centroid(self):
+        centroid = np.array([0,0])
+        for agent in self.agents:
+            centroid = (centroid +  agent.position())# / np.linalg.norm(i.position())
+        centroid = centroid / (len(self.agents))
+        centroid = centroid# / np.linalg.norm(centroid)
+        return centroid

@@ -121,13 +121,41 @@ class Agent_Flock(Agent):
             vect = vect / np.linalg.norm(vect)
         return vect
 
-    def distribute(self, neighbors, distances):
+    def distribute(self):
         from constants import avoidance_radius
         n_agents = len(self.environment.agents)
         circum = n_agents*avoidance_radius*1.2
         r = circum/np.pi/2
-        centroid = self.centroid_neighbors(neighbors)
+        centroid = self.environment.global_centroid
         vect_centroid = centroid - self.position()
+
+        dist_centroid = np.linalg.norm(vect_centroid)
+        vect_t = np.array([0,0])
+        vect_n = np.array([-vect_centroid[1], vect_centroid[0]])
+        if dist_centroid > r:
+            vect_t = vect_t + vect_centroid + vect_n
+        if dist_centroid < r:
+            vect_t = vect_t - vect_centroid + vect_n
+
+        if np.linalg.norm(vect_t) != 0:
+            vect_t = vect_t/np.linalg.norm(vect_t)
+        return vect_t
+
+    def flower(self, n_petal):
+        centroid = self.environment.global_centroid
+        vect_centroid = centroid - self.position()
+        theta = np.arctan(vect_centroid[1] / vect_centroid[0])
+        if vect_centroid[0] < 0:
+            theta = np.arctan(vect_centroid[1]/vect_centroid[0]) + np.pi
+        if vect_centroid[1] < 0 and vect_centroid[0] > 0:
+            theta = np.arctan(vect_centroid[1]/vect_centroid[0]) + np.pi*2
+        #r = abs(1-np.sin(3*theta)*np.cos(theta))*180   #weird cookie shape
+
+        n_petal = n_petal / 2
+
+        r = abs(175 * np.cos(n_petal * theta))                   #4 pedal flower
+        r = max(50, r)
+        #r = np.sqrt(np.abs(np.cos(theta)))*200
         dist_centroid = np.linalg.norm(vect_centroid)
         vect_t = np.array([0,0])
 
@@ -135,39 +163,12 @@ class Agent_Flock(Agent):
             vect_t = vect_t + vect_centroid
         if dist_centroid < r:
             vect_t = vect_t - vect_centroid
-            if dist_centroid < r - 4:
-                print(self.id, self.position(), centroid)
 
         if np.linalg.norm(vect_t) != 0:
             vect_t = vect_t/np.linalg.norm(vect_t)
         return vect_t
 
-        ''''
-        vect_centroid = centroid - self.position()
-        dist_centroid = np.linalg.norm(vect_centroid)
-        neighbors_2 = neighbors[:2]
-        distances_2 = distances[:2]
-        neighbors_r = neighbors[2:]
-        distances_r = distances[2:]
-        d_distribute = 35
-        vect_t = np.array([0,0])
-        for i, neighbor in enumerate(neighbors_2):
-            vect = neighbor.position() - self.position()
-            dist_nc = np.linalg.norm(centroid - neighbor.position())
-            if dist_nc != dist_centroid:
-                vect_t = vect_t - vect_centroid
-            if distances_2[i] > d_distribute:
-                vect_t = vect_t + vect
-            if distances_2[i] < d_distribute:
-                vect_t = vect_t - vect
-        for j, neighbor in enumerate(neighbors_r):
-            vect = neighbor.position() - self.position()
-            if distances_r[j] < d_distribute*1.8:
-                vect_t = vect_t - vect
-        if np.linalg.norm(vect_t) != 0:
-            vect_t = vect_t/np.linalg.norm(vect_t)
-        return vect_t
-        '''
+
     def center(self):
         from constants import center_r
         vect = np.array([0,0])
@@ -178,7 +179,7 @@ class Agent_Flock(Agent):
             vect = vect/np.linalg.norm(vect)
         return vect
 
-    def final_v(self, cohese=True, avoid=True, align=True, follow=False, go_point=False, go_line=False, go_shape = False, distribute = False, center=False):
+    def final_v(self, cohese=True, avoid=True, align=True, follow=False, go_point=False, go_line=False, go_shape = False, distribute = False, center=False, n_petal=0):
         from constants import w_wall, w_cohesion, w_avoidance, w_alignment, w_follow, w_gopoint, w_goline, w_distribute, w_center
         from constants import k, avoidance_radius, distribute_radius
         neighbors, distances = self.sense_neighbors(k)
@@ -209,6 +210,8 @@ class Agent_Flock(Agent):
         if go_shape:
             self.command_v = self.command_v + self.goto_shape() * w_goline
         if distribute:
-            self.command_v = self.command_v + self.distribute(neighbors, distances) * w_distribute
+            self.command_v = self.command_v + self.distribute() * w_distribute
         if center:
             self.command_v = self.command_v + self.center()*w_center
+        if n_petal:
+            self.command_v = self.command_v + self.flower(n_petal) * w_distribute
