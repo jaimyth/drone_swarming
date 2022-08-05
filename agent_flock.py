@@ -142,6 +142,7 @@ class Agent_Flock(Agent):
         return vect_t
 
     def flower(self, n_petal):
+
         centroid = self.environment.global_centroid
         vect_centroid = centroid - self.position()
         theta = np.arctan(vect_centroid[1] / vect_centroid[0])
@@ -150,14 +151,25 @@ class Agent_Flock(Agent):
         if vect_centroid[1] < 0 and vect_centroid[0] > 0:
             theta = np.arctan(vect_centroid[1]/vect_centroid[0]) + np.pi*2
         #r = abs(1-np.sin(3*theta)*np.cos(theta))*180   #weird cookie shape
-
+        """
         n_petal = n_petal / 2
-
         r = abs(175 * np.cos(n_petal * theta))                   #4 pedal flower
         r = max(50, r)
+        """
         #r = np.sqrt(np.abs(np.cos(theta)))*200
         dist_centroid = np.linalg.norm(vect_centroid)
         vect_t = np.array([0,0])
+        #todo make square its own function
+        kl = 150
+        if theta <= np.deg2rad(45) or theta >= np.deg2rad(305):
+            r = 1/np.cos(theta)*kl
+            #r = kl/(3*np.cos(theta)+2*np.sin(theta)) straight line
+        if theta >= np.deg2rad(45) and theta <= np.deg2rad(135):
+            r = 1/np.sin(theta)*kl
+        if theta >= np.deg2rad(135) and theta <= np.deg2rad(225):
+            r = -1/np.cos(theta)*kl
+        if theta >= np.deg2rad(225) and theta <= np.deg2rad(305):
+            r = -1/np.sin(theta)*kl
 
         if dist_centroid > r:
             vect_t = vect_t + vect_centroid
