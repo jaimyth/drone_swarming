@@ -150,26 +150,48 @@ class Agent_Flock(Agent):
             theta = np.arctan(vect_centroid[1]/vect_centroid[0]) + np.pi
         if vect_centroid[1] < 0 and vect_centroid[0] > 0:
             theta = np.arctan(vect_centroid[1]/vect_centroid[0]) + np.pi*2
-        #r = abs(1-np.sin(3*theta)*np.cos(theta))*180   #weird cookie shape
-        """
+
         n_petal = n_petal / 2
-        r = abs(175 * np.cos(n_petal * theta))                   #4 pedal flower
+        r = abs(175 * np.cos(n_petal * theta))
         r = max(50, r)
-        """
-        #r = np.sqrt(np.abs(np.cos(theta)))*200
+
         dist_centroid = np.linalg.norm(vect_centroid)
         vect_t = np.array([0,0])
-        #todo make square its own function
-        kl = 150
-        if theta <= np.deg2rad(45) or theta >= np.deg2rad(305):
-            r = 1/np.cos(theta)*kl
-            #r = kl/(3*np.cos(theta)+2*np.sin(theta)) straight line
-        if theta >= np.deg2rad(45) and theta <= np.deg2rad(135):
-            r = 1/np.sin(theta)*kl
-        if theta >= np.deg2rad(135) and theta <= np.deg2rad(225):
-            r = -1/np.cos(theta)*kl
-        if theta >= np.deg2rad(225) and theta <= np.deg2rad(305):
-            r = -1/np.sin(theta)*kl
+
+        if dist_centroid > r:
+            vect_t = vect_t + vect_centroid
+        if dist_centroid < r:
+            vect_t = vect_t - vect_centroid
+
+        if np.linalg.norm(vect_t) != 0:
+            vect_t = vect_t/np.linalg.norm(vect_t)
+        return vect_t
+
+    def polygon(self, n_polygon):
+        centroid = self.environment.global_centroid
+        vect_centroid = centroid - self.position()
+        theta = np.arctan(vect_centroid[1] / vect_centroid[0])
+        if vect_centroid[0] < 0:
+            theta = np.arctan(vect_centroid[1]/vect_centroid[0]) + np.pi
+        if vect_centroid[1] < 0 and vect_centroid[0] > 0:
+            theta = np.arctan(vect_centroid[1]/vect_centroid[0]) + np.pi*2
+        dist_centroid = np.linalg.norm(vect_centroid)
+        vect_t = np.array([0,0])
+        kl = 200
+
+        segment_angles = np.deg2rad(np.linspace(0, 360, n_polygon+1))[1:]
+        #r = kl*np.cos(np.pi / n_polygon) / np.cos(2 * np.pi * (n_polygon * theta) % 1 / n_polygon - np.pi / n_polygon)
+
+        print(np.rad2deg(segment_angles))
+        #todo: Complicated math
+        segment_coefficients = [[1,1], [-1,1], [-1,-1], [1,-1]]
+        segment_coefficients = [ [1,0], [1,1], [0,1], [-1,1], [1,0], [-1,-1], [0,-1], [1,-1] ]
+
+        for i, angle in enumerate(segment_angles):
+            if theta <= angle:
+                coefficient = segment_coefficients[i]
+                r = abs(kl/(coefficient[0]*np.cos(theta)+coefficient[1]*np.sin(theta)))
+                break
 
         if dist_centroid > r:
             vect_t = vect_t + vect_centroid
@@ -191,7 +213,8 @@ class Agent_Flock(Agent):
             vect = vect/np.linalg.norm(vect)
         return vect
 
-    def final_v(self, cohese=True, avoid=True, align=True, follow=False, go_point=False, go_line=False, go_shape = False, distribute = False, center=False, n_petal=0):
+    def final_v(self, cohese=True, avoid=True, align=True, follow=False, go_point=False, go_line=False, go_shape = False
+                , distribute = False, center=False, n_petal=0, n_polygon =0):
         from constants import w_wall, w_cohesion, w_avoidance, w_alignment, w_follow, w_gopoint, w_goline, w_distribute, w_center
         from constants import k, avoidance_radius, distribute_radius
         neighbors, distances = self.sense_neighbors(k)
@@ -209,7 +232,7 @@ class Agent_Flock(Agent):
                     neighbors_distribute.append(neighbors[i])
                     if distances[i] < avoidance_radius:
                         neighbors_avoid.append(neighbors[i])
-            self.command_v =  self.command_v + self.avoidance(neighbors_avoid)*w_avoidance
+            self.command_v = self.command_v + self.avoidance(neighbors_avoid)*w_avoidance
         if align:
             neighbors_align = neighbors
             self.command_v = self.command_v + self.alignment(neighbors_align)*w_alignment
@@ -227,3 +250,5 @@ class Agent_Flock(Agent):
             self.command_v = self.command_v + self.center()*w_center
         if n_petal:
             self.command_v = self.command_v + self.flower(n_petal) * w_distribute
+        if n_polygon:
+            self.command_v = self.command_v + self.polygon(n_polygon) * w_distribute
