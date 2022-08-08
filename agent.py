@@ -62,9 +62,6 @@ class Agent:
         return neighbor_agents, distance_sorted
 
     def centroid_neighbors(self, agent_list):
-        '''
-        agent_list does not include itself
-        '''
         centroid = np.array([0,0])
         for i in agent_list:
             centroid = (centroid +  i.position())# / np.linalg.norm(i.position())

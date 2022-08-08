@@ -32,6 +32,7 @@ class Agent_Flock(Agent):
             delta_v = i.v - self.v
             align_v = align_v + delta_v
         align_v = (align_v + self.v)
+        #todo: check line above??
         if align_v[0] == 0 and align_v[1] == 0:
             return align_v
         align_v = align_v / np.linalg.norm(align_v)
