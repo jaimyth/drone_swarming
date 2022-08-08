@@ -43,30 +43,29 @@ class Agent:
         if k==1:
             return [], []
         distances = []
+        delta_positions = []
+        delta_velocities = []
         for i in agents:
             from constants import collision_radius
-            dx = i.x - self.x
-            dy = i.y - self.y
-            dist = np.sqrt(dx**2+dy**2)
+            delta_pos = i.position() - self.position()
+            delta_v = i.v - self.v
+            delta_positions.append(delta_pos)
+            delta_velocities.append(delta_v)
+            dist = np.linalg.norm(delta_pos)
             distances.append(dist)
             if dist < collision_radius and self.id != i.id:
                 self.color = [0,0,0]
                 i.color = [0,0,0]
         order = np.argsort(distances)[1:k+1]
+        positions_ordered = [delta_positions[i] for i in order]
+        velocities_ordered = [delta_velocities[i] for i in order]
+        return positions_ordered, velocities_ordered
 
-        neighbor_agents = []
-        distance_sorted = []
-        for j in order:
-            neighbor_agents.append(agents[j])
-            distance_sorted.append(distances[j])
-        return neighbor_agents, distance_sorted
-
-    def centroid_neighbors(self, agent_list):
+    def centroid_neighbors(self, delta_positions):
         centroid = np.array([0,0])
-        for i in agent_list:
-            centroid = (centroid +  i.position())# / np.linalg.norm(i.position())
-        centroid = centroid / (len(agent_list))
-        centroid = centroid# / np.linalg.norm(centroid)
+        for i in delta_positions:
+            centroid = (centroid +  i)# / np.linalg.norm(i.position())
+        centroid = centroid / (len(delta_positions)+1)
         return centroid
 
     def draw(self, screen):

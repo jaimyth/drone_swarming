@@ -51,9 +51,6 @@ env.ppoints = [pp]
 
 while run:
     t = pg.time.get_ticks()
-
-
-
     env.clear_environment()
     env.global_centroid = env.calculate_global_centroid()
     for i, ag in enumerate(env.agents):
@@ -63,7 +60,7 @@ while run:
         ag.update_position()
 
         #ag.draw_history(env.screen)
-    centroid = env.agents[0].centroid_neighbors(env.agents[0].sense_neighbors(100)[0])
+    centroid = env.global_centroid# - env.agents[0].position()
     pg.draw.circle(env.screen, (0, 0, 255), centroid.astype(int),
                    5, 0)
 

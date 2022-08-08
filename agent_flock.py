@@ -4,38 +4,30 @@ from agent import Agent
 
 class Agent_Flock(Agent):
 
-    def cohesion(self, neighbors):
-        centroid = self.centroid_neighbors(neighbors)
-        diff = centroid - self.position()
-        centroid_v = diff/np.linalg.norm(diff)
+    def cohesion(self, delta_positions):
+        centroid = self.centroid_neighbors(delta_positions)
+        #diff = centroid - self.position()
+        centroid_v = centroid/np.linalg.norm(centroid)
         return centroid_v
 
-    def avoidance(self, neighbors):
+    def avoidance(self, delta_positions):
         avoidance_v = np.array([0,0])
-        if len(neighbors) == 0:
-
+        if len(delta_positions) == 0:
             return avoidance_v
-        for i in neighbors:
-            d_vector = i.position() - self.position()
-            avoidance_v = avoidance_v -  d_vector
-        avoidance_v = avoidance_v / np.linalg.norm(avoidance_v)
-        if any(np.isnan(avoidance_v)):
-            return np.array([0,0])
-        else:
-            return avoidance_v
+        for i in delta_positions:
+            avoidance_v = avoidance_v -  i
+        if np.linalg.norm(avoidance_v) != 0:
+            avoidance_v = avoidance_v/np.linalg.norm(avoidance_v)
+        return avoidance_v
 
-    def alignment(self, neighbors):
+    def alignment(self, delta_velocities):
         align_v = np.array([0,0])
-        if len(neighbors) == 0:
+        if len(delta_velocities) == 0:
             return align_v
-        for i in neighbors:
-            delta_v = i.v - self.v
-            align_v = align_v + delta_v
-        align_v = (align_v + self.v)
-        #todo: check line above??
-        if align_v[0] == 0 and align_v[1] == 0:
-            return align_v
-        align_v = align_v / np.linalg.norm(align_v)
+        for i in delta_velocities:
+            align_v = align_v + i
+        if np.linalg.norm(align_v) != 0:
+            align_v = align_v/np.linalg.norm(align_v)
         return align_v
 
     def follow_leader(self):
@@ -214,28 +206,26 @@ class Agent_Flock(Agent):
             vect = vect/np.linalg.norm(vect)
         return vect
 
-    def final_v(self, cohese=True, avoid=True, align=True, follow=False, go_point=False, go_line=False, go_shape = False
+    def final_v(self, cohese=False, avoid=True, align=False, follow=False, go_point=False, go_line=False, go_shape = False
                 , distribute = False, center=False, n_petal=0, n_polygon =0):
         from constants import w_wall, w_cohesion, w_avoidance, w_alignment, w_follow, w_gopoint, w_goline, w_distribute, w_center
-        from constants import k, avoidance_radius, distribute_radius
-        neighbors, distances = self.sense_neighbors(k)
+        from constants import k, avoidance_radius
+        delta_positions, delta_velocities = self.sense_neighbors(k)
         self.command_v = 0
 
         self.command_v = self.command_v +self.avoid_wall()*w_wall
         if cohese:
-            neighbors_cohese = neighbors
+            neighbors_cohese = delta_positions
             self.command_v = self.command_v + self.cohesion(neighbors_cohese)*w_cohesion
         if avoid:
             neighbors_avoid = []
-            neighbors_distribute = []
-            for i in range(len(distances)):
-                if distances[i] < distribute_radius:
-                    neighbors_distribute.append(neighbors[i])
-                    if distances[i] < avoidance_radius:
-                        neighbors_avoid.append(neighbors[i])
+            for i in delta_positions:
+                if np.linalg.norm(i) < avoidance_radius:
+                    print(i, np.linalg.norm(i))
+                    neighbors_avoid.append(i)
             self.command_v = self.command_v + self.avoidance(neighbors_avoid)*w_avoidance
         if align:
-            neighbors_align = neighbors
+            neighbors_align = delta_velocities
             self.command_v = self.command_v + self.alignment(neighbors_align)*w_alignment
         if follow:
             self.command_v = self.command_v + self.follow_leader()*w_follow
