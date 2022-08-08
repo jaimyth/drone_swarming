@@ -170,15 +170,15 @@ class Agent_Flock(Agent):
             theta = np.arctan(vect_centroid[1]/vect_centroid[0]) + np.pi*2
         dist_centroid = np.linalg.norm(vect_centroid)
         vect_t = np.array([0,0])
-        kl = 200
+        kl = 250
 
-        segment_angles = np.deg2rad(np.linspace(0, 360, n_polygon+1))[1:]
+        segment_angles = np.deg2rad(np.linspace(0, 360, n_polygon))[1:]
         #r = kl*np.cos(np.pi / n_polygon) / np.cos(2 * np.pi * (n_polygon * theta) % 1 / n_polygon - np.pi / n_polygon)
 
         print(np.rad2deg(segment_angles))
         #todo: Complicated math
         segment_coefficients = [[1,1], [-1,1], [-1,-1], [1,-1]]
-        segment_coefficients = [ [1,0], [1,1], [0,1], [-1,1], [1,0], [-1,-1], [0,-1], [1,-1] ]
+        segment_coefficients = [[1,1], [0,1], [-1,1], [-1,-1], [0,-1], [1,-1] ]
 
         for i, angle in enumerate(segment_angles):
             if theta <= angle:

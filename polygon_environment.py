@@ -41,7 +41,7 @@ spiral = False
 polygon = False
 
 n_polygon = 0
-n_polygon_old = 8
+n_polygon_old = 7
 n_petal = 0
 n_petal_old = 3
 
