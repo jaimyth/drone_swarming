@@ -48,14 +48,28 @@ n_petal_old = 3
 pp = Ppoint(env, 475, 475)
 env.ppoints = [pp]
 
+scale=1
+n_msg = 6
+spacing = 22
+msg_y_positions = np.arange(10, 1000, spacing)
+msg_x_positions = np.ones(len(msg_y_positions))*10
+msg_positions = np.array([msg_x_positions, msg_y_positions]).T
+
 
 while run:
     t = pg.time.get_ticks()
     env.clear_environment()
+    msg_cohese = f'[C]ohese : {cohese}'
+    msg_align = f'[A]lign : {align}'
+    msg_distribute = f'[D]istribute : {distribute}'
+    msg_flower = f'[F]lower : {n_petal}'
+    msg_polygon = f'[P]olygon : {n_polygon}'
+    msg_middle = f'[M]iddle : {center}'
+
+    messages = [msg_cohese, msg_align, msg_distribute, msg_flower, msg_polygon, msg_middle]
     env.global_centroid = env.calculate_global_centroid()
     for i, ag in enumerate(env.agents):
-        ag.final_v(cohese=cohese, avoid=True, align=align, follow=False, go_point=go_point, go_line=False,
-                   go_shape=go_line, distribute=distribute, center=center, n_petal = n_petal, n_polygon=n_polygon)
+        ag.final_v(scale, cohese=cohese, avoid=True, align=align, follow=False, distribute=distribute, center=center, n_petal = n_petal, n_polygon=n_polygon)
         ag.update_velocity()
         ag.update_position()
 
@@ -66,6 +80,10 @@ while run:
 
     env.update_agents()
     env.draw_agents()
+    for i in range(len(messages)):
+        env.render_text(messages[i], position=msg_positions[i])
+    if distribute or n_polygon or n_petal:
+        env.render_text(f'Scale = {scale}', msg_positions[len(messages) + 1])
     pg.time.delay(int(constants.dt*1000))
     for event in pg.event.get():
         if event.type == pg.QUIT:
@@ -77,43 +95,77 @@ while run:
             if event.key == pg.K_h:
                 for ag in env.agents:
                     ag.reset_history()
-
             if event.key == pg.K_c:
                 cohese = not cohese
                 print(f'Cohese {cohese}')
-            #if event.key == pg.K_p:
-             #   go_point = not go_point
-              #  print(f'Go point {go_point}')
-            if event.key == pg.K_l:
-                go_line = not go_line
-                print(f'Go line {go_line}')
             if event.key == pg.K_a:
                 align = not align
                 print(f'Align {align}')
-            if event.key == pg.K_d:
-                distribute = not distribute
-                print(f'Distribute {distribute}')
             if event.key == pg.K_m:
                 center = not center
                 print(f'Center {center}')
+
+            if event.key == pg.K_d:
+                scale = 1.2
+                distribute = not distribute
+                print(f'Distribute {distribute}')
+            if distribute:
+                if event.key == pg.K_RIGHT:
+                    scale = scale + 0.1
+                if event.key == pg.K_LEFT:
+                    scale = scale - 0.1
+                    scale = max(0.1, scale)
+
             if event.key == pg.K_f:
+                scale = 175
                 if n_petal == 0:
                     n_petal = n_petal_old
                     print(f'Flower True {n_petal}')
+                    n_polygon_old = n_petal
+                    n_polygon = 0
+                    print(f'Polygon False')
                 else:
                     n_petal_old = n_petal
                     n_petal = 0
                     print(f'Flower False')
+            if n_petal:
+                if event.key == pg.K_RIGHT:
+                    scale = scale + 5
+                if event.key == pg.K_LEFT:
+                    scale = scale - 5
+                    scale = max(1, scale)
+
             if event.key == pg.K_p:
                 if n_polygon == 0:
                     n_polygon = n_polygon_old
                     print(f'Polygon True {n_polygon}')
+                    n_petal_old = n_petal
+                    n_petal = 0
+                    print(f'Flower False')
                 else:
                     n_petal_old = n_petal
                     n_petal = 0
                     print(f'Polygon False')
-            if event.key == pg.K_UP:
-                n_petal += 1
-            if event.key == pg.K_DOWN:
-                n_petal -= 1
+            if n_polygon:
+                if event.key == pg.K_RIGHT:
+                    scale = scale + 1
+                if event.key == pg.K_LEFT:
+                    scale = scale - 1
+                    scale = max(1, scale)
+
+
+            if n_petal > 0:
+                if event.key == pg.K_UP:
+                    n_petal += 1
+                if event.key == pg.K_DOWN:
+                    n_petal -= 1
+                    n_petal = max(n_petal, 3)
+            elif n_polygon > 0:
+                if event.key == pg.K_UP:
+                    n_polygon += 1
+                if event.key == pg.K_DOWN:
+                    n_polygon -= 1
+                    n_polygon = max(n_polygon, 3)
+
+
     env.update_environment()

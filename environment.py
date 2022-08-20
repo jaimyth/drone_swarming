@@ -1,6 +1,6 @@
 import numpy as np
 import pygame as pg
-
+import pygame.freetype
 class Environment:
 
     def __init__(self, width, height, bg_color):
@@ -14,6 +14,7 @@ class Environment:
         self.leader = None
         self.bg_color = bg_color
         self.screen = self.initialise_environment()
+        self.font = self.initialise_font()
         self.global_centroid = 0
 
     def add_agent(self, agent):
@@ -31,6 +32,13 @@ class Environment:
         screen = pg.display.set_mode((self.width, self.height))
         screen.fill(self.bg_color)
         return screen
+
+    def initialise_font(self):
+        font = pygame.freetype.SysFont('arial', 20)
+        return font
+
+    def render_text(self, msg, position):
+        self.font.render_to(self.screen, (position[0], position[1]), msg, [0,0,0])
 
     def update_environment(self):
         pg.display.flip()

@@ -114,10 +114,10 @@ class Agent_Flock(Agent):
             vect = vect / np.linalg.norm(vect)
         return vect
 
-    def distribute(self):
+    def distribute(self, scale=1.2):
         from constants import avoidance_radius
         n_agents = len(self.environment.agents)
-        circum = n_agents*avoidance_radius*1.2
+        circum = n_agents*avoidance_radius*scale
         r = circum/np.pi/2
         centroid = self.environment.global_centroid
         vect_centroid = centroid - self.position()
@@ -134,7 +134,7 @@ class Agent_Flock(Agent):
             vect_t = vect_t/np.linalg.norm(vect_t)
         return vect_t
 
-    def flower(self, n_petal):
+    def flower(self, n_petal, scale=175):
 
         centroid = self.environment.global_centroid
         vect_centroid = centroid - self.position()
@@ -145,7 +145,7 @@ class Agent_Flock(Agent):
             theta = np.arctan(vect_centroid[1]/vect_centroid[0]) + np.pi*2
 
         n_petal = n_petal / 2
-        r = abs(175 * np.cos(n_petal * theta))
+        r = abs(scale * np.cos(n_petal * theta))
         r = max(50, r)
 
         dist_centroid = np.linalg.norm(vect_centroid)
@@ -160,7 +160,7 @@ class Agent_Flock(Agent):
             vect_t = vect_t/np.linalg.norm(vect_t)
         return vect_t
 
-    def polygon(self, n_polygon):
+    def polygon(self, n_polygon, scale):
         centroid = self.environment.global_centroid
         vect_centroid = centroid - self.position()
         theta = np.arctan(vect_centroid[1] / vect_centroid[0])
@@ -175,7 +175,7 @@ class Agent_Flock(Agent):
         segment_angles = np.deg2rad(np.linspace(0, 360, n_polygon))[1:]
         #r = kl*np.cos(np.pi / n_polygon) / np.cos(2 * np.pi * (n_polygon * theta) % 1 / n_polygon - np.pi / n_polygon)
 
-        print(np.rad2deg(segment_angles))
+
         #todo: Complicated math
         segment_coefficients = [[1,1], [-1,1], [-1,-1], [1,-1]]
         segment_coefficients = [[1,1], [0,1], [-1,1], [-1,-1], [0,-1], [1,-1] ]
@@ -206,8 +206,7 @@ class Agent_Flock(Agent):
             vect = vect/np.linalg.norm(vect)
         return vect
 
-    def final_v(self, cohese=False, avoid=True, align=False, follow=False, go_point=False, go_line=False, go_shape = False
-                , distribute = False, center=False, n_petal=0, n_polygon =0):
+    def final_v(self, scale = 100, cohese=False, avoid=True, align=False, follow=False, distribute = False, center=False, n_petal=0, n_polygon =0):
         from constants import w_wall, w_cohesion, w_avoidance, w_alignment, w_follow, w_gopoint, w_goline, w_distribute, w_center
         from constants import k, avoidance_radius
         delta_positions, delta_velocities = self.sense_neighbors(k)
@@ -221,7 +220,6 @@ class Agent_Flock(Agent):
             neighbors_avoid = []
             for i in delta_positions:
                 if np.linalg.norm(i) < avoidance_radius:
-                    print(i, np.linalg.norm(i))
                     neighbors_avoid.append(i)
             self.command_v = self.command_v + self.avoidance(neighbors_avoid)*w_avoidance
         if align:
@@ -229,17 +227,11 @@ class Agent_Flock(Agent):
             self.command_v = self.command_v + self.alignment(neighbors_align)*w_alignment
         if follow:
             self.command_v = self.command_v + self.follow_leader()*w_follow
-        if go_point:
-            self.command_v = self.command_v + self.goto_ppoint()*w_gopoint
-        if go_line:
-            self.command_v = self.command_v + self.goto_line()*w_goline
-        if go_shape:
-            self.command_v = self.command_v + self.goto_shape() * w_goline
         if distribute:
-            self.command_v = self.command_v + self.distribute() * w_distribute
+            self.command_v = self.command_v + self.distribute(scale) * w_distribute
         if center:
             self.command_v = self.command_v + self.center()*w_center
         if n_petal:
-            self.command_v = self.command_v + self.flower(n_petal) * w_distribute
+            self.command_v = self.command_v + self.flower(n_petal, scale) * w_distribute
         if n_polygon:
-            self.command_v = self.command_v + self.polygon(n_polygon) * w_distribute
+            self.command_v = self.command_v + self.polygon(n_polygon, scale) * w_distribute
