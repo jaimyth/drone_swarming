@@ -1,10 +1,6 @@
 import pygame as pg
 import random
 import numpy as np
-from agent import Agent
-from ppoint import Ppoint
-from straight_line import S_line
-from shape import Shape, create_polygon_points
 from agent_flock import Agent_Flock
 from environment import Environment
 import constants
@@ -37,31 +33,33 @@ go_line = False
 align = False
 distribute = False
 center = False
-spiral = False
-polygon = False
-
+flower = False
+shape = False
+draw = False
 n_polygon = 0
 n_polygon_old = 7
 n_petal = 0
 n_petal_old = 3
 
-pp = Ppoint(env, 475, 475)
-env.ppoints = [pp]
+scale = 100
+n_shape = 4
+m_shape = 0
+k_shape = 1
+shape_factors = (scale, n_shape, m_shape, k_shape)
 
-scale=1
 n_msg = 6
 spacing = 22
 msg_y_positions = np.arange(10, 1000, spacing)
 msg_x_positions = np.ones(len(msg_y_positions))*10
 msg_positions = np.array([msg_x_positions, msg_y_positions]).T
-
+thetas = np.deg2rad(np.linspace(0, 360, 100))
 
 while run:
     t = pg.time.get_ticks()
     env.clear_environment()
     msg_cohese = f'[C]ohese : {cohese}'
     msg_align = f'[A]lign : {align}'
-    msg_distribute = f'[D]istribute : {distribute}'
+    msg_distribute = f'[S]hape : {shape}'
     msg_flower = f'[F]lower : {n_petal}'
     msg_polygon = f'[P]olygon : {n_polygon}'
     msg_middle = f'[M]iddle : {center}'
@@ -69,14 +67,33 @@ while run:
     messages = [msg_cohese, msg_align, msg_distribute, msg_flower, msg_polygon, msg_middle]
     env.global_centroid = env.calculate_global_centroid()
     for i, ag in enumerate(env.agents):
-        ag.final_v(scale, cohese=cohese, avoid=True, align=align, follow=False, distribute=distribute, center=center, n_petal = n_petal, n_polygon=n_polygon)
+        ag.final_v(shape_factors, cohese=cohese, avoid=True, align=align, follow=False, center=center, flower=flower, shape=shape)
         ag.update_velocity()
         ag.update_position()
-
+        ag.gradient()
         #ag.draw_history(env.screen)
     centroid = env.global_centroid# - env.agents[0].position()
     pg.draw.circle(env.screen, (0, 0, 255), centroid.astype(int),
                    5, 0)
+    if draw and (shape or flower):
+        if shape:
+            r = scale * np.cos((2 * np.arcsin(k_shape) + np.pi * m_shape) / (2 * n_shape)) / (
+                np.cos((2 * np.arcsin(k_shape * np.cos(n_shape * thetas)) + np.pi * m_shape) / (2 * n_shape)))
+        if flower:
+            r = abs(scale * np.cos(n_petal/2 * thetas))
+
+        x = r * np.cos(thetas) + centroid[0]
+        y = r * np.sin(thetas) + centroid[1]
+        points = np.array([x, y]).T
+        pg.draw.polygon(env.screen, [0, 0, 0], points, 2)
+        msg_scale = f'Scale [DOWN_ARROW] [UP_ARROW] : {scale}'
+        msg_n = f'n [LEFT_ARROW] [RIGHT_ARROW] : {n_shape}'
+        msg_m = f'm [,] [.] : {m_shape}'
+        msg_k = f"k [;] ['] : {k_shape}"
+        messages = [msg_scale, msg_n, msg_m, msg_k]
+        for i in range(len(messages)):
+            env.render_text(messages[i], position=msg_positions[i])
+
 
     env.update_agents()
     env.draw_agents()
@@ -84,11 +101,14 @@ while run:
         env.render_text(messages[i], position=msg_positions[i])
     if distribute or n_polygon or n_petal:
         env.render_text(f'Scale = {scale}', msg_positions[len(messages) + 1])
-    pg.time.delay(int(constants.dt*1000))
+
     for event in pg.event.get():
         if event.type == pg.QUIT:
             run = False
         if event.type == pg.KEYDOWN:
+            if event.key == pg.K_SPACE:
+                draw = not draw
+                print(f'Draw {draw}')
             if event.key == pg.K_r:
                 for i in env.agents:
                     i.reset_position()
@@ -105,67 +125,56 @@ while run:
                 center = not center
                 print(f'Center {center}')
 
-            if event.key == pg.K_d:
-                scale = 1.2
-                distribute = not distribute
-                print(f'Distribute {distribute}')
-            if distribute:
-                if event.key == pg.K_RIGHT:
-                    scale = scale + 0.1
-                if event.key == pg.K_LEFT:
-                    scale = scale - 0.1
-                    scale = max(0.1, scale)
-
             if event.key == pg.K_f:
                 scale = 175
+                flower = not flower
+                if flower and shape:
+                    shape = False
                 if n_petal == 0:
                     n_petal = n_petal_old
                     print(f'Flower True {n_petal}')
-                    n_polygon_old = n_petal
-                    n_polygon = 0
-                    print(f'Polygon False')
                 else:
                     n_petal_old = n_petal
                     n_petal = 0
                     print(f'Flower False')
-            if n_petal:
-                if event.key == pg.K_RIGHT:
-                    scale = scale + 5
-                if event.key == pg.K_LEFT:
-                    scale = scale - 5
-                    scale = max(1, scale)
-
-            if event.key == pg.K_p:
-                if n_polygon == 0:
-                    n_polygon = n_polygon_old
-                    print(f'Polygon True {n_polygon}')
-                    n_petal_old = n_petal
-                    n_petal = 0
-                    print(f'Flower False')
-                else:
-                    n_petal_old = n_petal
-                    n_petal = 0
-                    print(f'Polygon False')
-            if n_polygon:
-                if event.key == pg.K_RIGHT:
-                    scale = scale + 1
-                if event.key == pg.K_LEFT:
-                    scale = scale - 1
-                    scale = max(1, scale)
-
-
-            if n_petal > 0:
+            if flower:
                 if event.key == pg.K_UP:
+                    scale += 5
+                if event.key == pg.K_DOWN:
+                    scale -= 5
+                if event.key == pg.K_RIGHT:
                     n_petal += 1
-                if event.key == pg.K_DOWN:
+                if event.key == pg.K_LEFT:
                     n_petal -= 1
-                    n_petal = max(n_petal, 3)
-            elif n_polygon > 0:
+                    n_petal = max(1,n_petal)
+                shape_factors = (scale, n_petal, m_shape, k_shape)
+            if event.key == pg.K_s:
+                shape = not shape
+                if shape and flower:
+                    flower = False
+
+            if shape:
                 if event.key == pg.K_UP:
-                    n_polygon += 1
+                    scale += 5
                 if event.key == pg.K_DOWN:
-                    n_polygon -= 1
-                    n_polygon = max(n_polygon, 3)
+                    scale -= 5
+                if event.key == pg.K_RIGHT:
+                    n_shape += 0.5
+                if event.key == pg.K_LEFT:
+                    n_shape -= 0.5
+                    n_shape = max(1,n_shape)
+                if event.key == pg.K_COMMA:
+                    m_shape -= 1
+                if event.key == pg.K_PERIOD:
+                    m_shape += 1
+                if event.key == pg.K_SEMICOLON:
+                    k_shape -= 0.05
+                    k_shape = max(k_shape, 0)
+                if event.key == pg.K_QUOTE:
+                    k_shape += 0.05
+                    k_shape = min(k_shape,1)
+                shape_factors = (scale, n_shape, m_shape, k_shape)
 
 
+    pg.time.delay(int(constants.dt*2000))
     env.update_environment()

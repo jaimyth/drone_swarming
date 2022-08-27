@@ -1,6 +1,6 @@
 import numpy as np
-n_polygon = 7
+import matplotlib.pyplot as plt
 
-segment_angles = np.deg2rad(np.linspace(0, 360, n_polygon))[1:]
+pos = np.array([ [1,1], [1,2], [-1,3], [2,1] ])
 
-print(np.rad2deg(segment_angles))
+print(np.sum(pos, axis=0))

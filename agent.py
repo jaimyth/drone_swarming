@@ -59,7 +59,7 @@ class Agent:
         order = np.argsort(distances)[1:k+1]
         positions_ordered = [delta_positions[i] for i in order]
         velocities_ordered = [delta_velocities[i] for i in order]
-        return positions_ordered, velocities_ordered
+        return np.array(positions_ordered), np.array(velocities_ordered)
 
     def centroid_neighbors(self, delta_positions):
         centroid = np.array([0,0])
