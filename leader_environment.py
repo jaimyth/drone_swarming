@@ -2,6 +2,7 @@ import pygame as pg
 import random
 import numpy as np
 from agent_flock import Agent_Flock
+from agent import Agent
 from environment import Environment
 import constants
 from agent_id import *
@@ -21,21 +22,20 @@ x_pos = np.linspace(300, 600, n_grid)
 y_pos = np.linspace(300,600, n_grid)
 xx, yy = np.meshgrid(x_pos, y_pos)
 
-
+lead = Agent(environment=env, x = 200, y = 200, id=get_id())
+env.leader = lead
 for i in range(n):
     ag = Agent_Flock(environment=env, x = xx.flatten()[i], y =yy.flatten()[i], id=get_id())
     env.add_agent(ag)
 
 run =  True
 cohese = False
-go_point = False
-go_line = False
 align = False
-distribute = False
 center = False
 flower = False
 shape = False
 draw = False
+follow = False
 n_polygon = 0
 n_polygon_old = 7
 n_petal = 0
@@ -53,7 +53,6 @@ msg_y_positions = np.arange(10, 1000, spacing)
 msg_x_positions = np.ones(len(msg_y_positions))*10
 msg_positions = np.array([msg_x_positions, msg_y_positions]).T
 thetas = np.deg2rad(np.linspace(0, 360, 100))
-
 while run:
     t = pg.time.get_ticks()
     env.clear_environment()
@@ -66,11 +65,14 @@ while run:
 
     messages = [msg_cohese, msg_align, msg_distribute, msg_flower, msg_polygon, msg_middle]
     env.global_centroid = env.calculate_global_centroid()
+    lead.update_position()
+    lead.draw()
     for i, ag in enumerate(env.agents):
-        ag.final_v(shape_factors, cohese=cohese, avoid=True, align=align, follow=False, center=center, flower=flower, shape=shape)
+        ag.final_v(shape_factors, cohese=cohese, avoid=True, align=align, follow=follow, center=center, flower=flower, shape=shape)
         ag.update_velocity()
         ag.update_position()
         ag.gradient()
+        ag.draw()
         #ag.draw_history(env.screen)
     centroid = env.global_centroid# - env.agents[0].position()
     pg.draw.circle(env.screen, (0, 0, 255), centroid.astype(int),
@@ -95,11 +97,11 @@ while run:
             env.render_text(messages[i], position=msg_positions[i])
 
 
-    env.update_agents()
-    env.draw_agents()
+    #env.update_agents()
+    #env.draw_agents()
     for i in range(len(messages)):
         env.render_text(messages[i], position=msg_positions[i])
-    if distribute or n_polygon or n_petal:
+    if n_polygon or n_petal:
         env.render_text(f'Scale = {scale}', msg_positions[len(messages) + 1])
 
     for event in pg.event.get():
@@ -125,7 +127,8 @@ while run:
             if event.key == pg.K_m:
                 center = not center
                 print(f'Center {center}')
-
+            if event.key == pg.K_l:
+                follow = not follow
             if event.key == pg.K_f:
                 scale = 175
                 flower = not flower
@@ -139,9 +142,9 @@ while run:
                     n_petal = 0
                     print(f'Flower False')
             if flower:
-                scale = scale +5 *(keys[pg.K_UP] - keys[pg.K_DOWN])
+                scale = scale +5 *(keys[pg.K_EQUALS] - keys[pg.K_MINUS])
                 scale = max(5, scale)
-                n_petal = n_petal + (keys[pg.K_RIGHT] - keys[pg.K_LEFT])
+                n_petal = n_petal + (keys[pg.K_PERIOD] - keys[pg.K_COMMA])
                 n_petal = max(1,n_petal)
                 shape_factors = (scale, n_petal, m_shape, k_shape)
             if event.key == pg.K_s:
@@ -150,16 +153,16 @@ while run:
                     flower = False
 
             if shape:
-                scale = scale +5 *(keys[pg.K_UP] - keys[pg.K_DOWN])
+                scale = scale +5 *(keys[pg.K_EQUALS] - keys[pg.K_MINUS])
                 scale = max(5, scale)
-                n_shape = n_shape + 0.5*(keys[pg.K_RIGHT] - keys[pg.K_LEFT])
+                n_shape = n_shape + 0.5*(keys[pg.K_PERIOD] - keys[pg.K_COMMA])
                 n_shape = max(1,n_shape)
-                m_shape = m_shape + 1*(keys[pg.K_COMMA] - keys[pg.K_PERIOD])
-                k_shape = np.round(k_shape + 0.05*(keys[pg.K_QUOTE]-keys[pg.K_SEMICOLON]),1)
+                m_shape = m_shape + 1*(keys[pg.K_QUOTE] - keys[pg.K_SEMICOLON])
+                k_shape = np.round(k_shape + 0.05*(keys[pg.K_RIGHTBRACKET]-keys[pg.K_LEFTBRACKET]),2)
                 k_shape = max(k_shape, 0)
                 k_shape = min(k_shape,1)
                 shape_factors = (scale, n_shape, m_shape, k_shape)
-
-
+    ll = 50
+    lead.v = np.array([-keys[pg.K_LEFT]*ll + keys[pg.K_RIGHT]*ll, keys[pg.K_DOWN]*ll - keys[pg.K_UP]*ll])
     pg.time.delay(int(constants.dt*2000))
     env.update_environment()

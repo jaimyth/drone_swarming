@@ -5,6 +5,9 @@ import sys
 EPSILON = sys.float_info.epsilon  # Smallest possible difference.
 
 def convert_to_rgb(minval, maxval, val, colors):
+
+    #https://stackoverflow.com/questions/20792445/calculate-rgb-value-for-a-range-of-values-to-create-heat-map/71503186#71503186
+
     # `colors` is a series of RGB colors delineating a series of
     # adjacent linear color gradients between each pair.
 
@@ -57,65 +60,15 @@ class Agent_Flock(Agent):
         follow_v = np.array([0,0])
         follow_pos = np.array([0,0])
         leader = self.environment.leader
-        if leader is None:
+        if leader is None or np.linalg.norm(leader.v)==0:
             return follow_v
+
         delta_v = leader.v - self.v
-        delta_pos = leader.position() - self.position()
-        if delta_pos[0] == 0 and delta_pos[1] == 0:
-            return follow_pos
-        follow_pos = delta_pos / np.linalg.norm(delta_pos)
-        return follow_pos
-
-    def goto_ppoint(self):
-        closest_dist = 10000
-        for ppoint in self.environment.ppoints:
-            dx = ppoint.x - self.x
-            dy = ppoint.y - self.y
-            dist = np.sqrt(dx**2+dy**2)
-            if dist < closest_dist:
-                closest_ppoint = ppoint
-                closest_dist = dist
-                vect = ppoint.position() - self.position()
-        vect = vect / np.linalg.norm(vect)
-        return vect
-
-    def goto_line(self):
-        line = self.environment.line
-        vect_b = 0
-        if self.position()[0] > line.point1[0]:
-            vect_b = line.point1 - self.position()
-        if self.position()[0] < line.point0[0]:
-            vect_b = line.point0 - self.position()
-        p_line = (self.x + line.a*(self.y - line.b))/(1+line.a**2)*np.array([1, line.a])+ np.array([0, line.b])
-        vect_p = p_line-self.position()
-        vect = vect_b+vect_p
-        return vect / np.linalg.norm(vect)
-
-    def goto_shape(self):
-        shortest_dist = 10000
-        shortest_vect = None
-        for line in self.environment.shape.lines:
-            vect_b = 0
-            p_line = (self.x + line.a * (self.y - line.b)) / (1 + line.a ** 2) * np.array([1, line.a]) + np.array(
-                [0, line.b])
-            if p_line[0] < line.point0[0]:
-                vect_b = line.point0 - self.position()
-            if p_line[0] > line.point1[0]:
-                vect_b = line.point1 - self.position()
-            vect_p = p_line - self.position()
-            vect = vect_b + vect_p
-            if np.linalg.norm(vect) < shortest_dist:
-                shortest_dist = np.linalg.norm(vect)
-                shortest_vect = vect
-                if np.linalg.norm(vect) == 0:
-                    break
-        if np.linalg.norm(shortest_vect) == 0:
-            return shortest_vect
-        else:
-            vect_c = self.environment.shape.center - self.position()
-            vect_c = vect_c/np.linalg.norm(vect_c)
-            shortest_vect = shortest_vect# + vect_c/1000
-        return shortest_vect/np.linalg.norm(shortest_vect)
+        #delta_pos = leader.position() - self.position()
+        if np.linalg.norm(delta_v) != 0:
+            delta_v = delta_v/np.linalg.norm(delta_v)
+        #follow_pos = delta_pos / np.linalg.norm(delta_pos)
+        return delta_v
 
     def avoid_wall(self):
         from constants import wall_threshold
@@ -213,6 +166,8 @@ class Agent_Flock(Agent):
         from constants import w_wall, w_cohesion, w_avoidance, w_alignment, w_follow, w_distribute, w_center
         from constants import k, avoidance_radius
         delta_positions, delta_velocities = self.sense_neighbors(k)
+        delta_p_leader = self.environment.leader.position() - self.position()
+        delta_v_leader = self.environment.leader.v - self.v
         self.command_v = 0
 
         self.command_v = self.command_v +self.avoid_wall()*w_wall
@@ -224,19 +179,17 @@ class Agent_Flock(Agent):
             for i in delta_positions:
                 if np.linalg.norm(i) < avoidance_radius:
                     neighbors_avoid.append(i)
+            if np.linalg.norm(delta_p_leader) < avoidance_radius:
+                neighbors_avoid.append(delta_p_leader)
             self.command_v = self.command_v + self.avoidance(neighbors_avoid)*w_avoidance
         if align:
             neighbors_align = delta_velocities
             self.command_v = self.command_v + self.alignment(neighbors_align)*w_alignment
         if follow:
             self.command_v = self.command_v + self.follow_leader()*w_follow
-        #if distribute:
-        #    self.command_v = self.command_v + self.distribute(scale) * w_distribute
         if center:
             self.command_v = self.command_v + self.center()*w_center
         if flower:
             self.command_v = self.command_v + self.flower(shape_factors[0], shape_factors[1]) * w_distribute
-        #if n_polygon:
-        #    self.command_v = self.command_v + self.polygon(n_polygon, scale) * w_distribute
         if shape:
             self.command_v = self.command_v + self.shape(shape_factors[0], shape_factors[1], shape_factors[2], shape_factors[3])* w_distribute

@@ -16,6 +16,7 @@ class Agent:
 
         self.v =np.array([0,0])
         self.command_v = 0
+        self.crashed = False
 
 
         self.id = id    #unique id to identify each agent
@@ -23,14 +24,15 @@ class Agent:
     def update_velocity(self):
         from constants import v_factor
         self.v = (1-v_factor)*self.v + v_factor*self.command_v
+        if self.crashed:
+            self.color = [0,0,0]
+            self.v = np.array([0,50])
 
     def update_position(self):
         self.x += self.dt * self.v[0]
         self.y += self.dt * self.v[1]
-        # if self.id == 10:
-        #     print(f'{self.x, self.y}, id = {self.id}')
-        self.x_hist.append(self.x)
-        self.y_hist.append(self.y)
+        #self.x_hist.append(self.x)
+        #self.y_hist.append(self.y)
 
     def position(self):
         return np.array([self.x, self.y])
@@ -56,6 +58,7 @@ class Agent:
             if dist < collision_radius and self.id != i.id:
                 self.color = [0,0,0]
                 i.color = [0,0,0]
+                self.crashed=True
         order = np.argsort(distances)[1:k+1]
         positions_ordered = [delta_positions[i] for i in order]
         velocities_ordered = [delta_velocities[i] for i in order]
@@ -68,9 +71,9 @@ class Agent:
         centroid = centroid / (len(delta_positions)+1)
         return centroid
 
-    def draw(self, screen):
+    def draw(self):
         from constants import size_agents
-        pg.draw.circle(screen, self.color, [int(round(self.x,0)), int(round(self.y,0))],
+        pg.draw.circle(self.environment.screen, self.color, [int(round(self.x,0)), int(round(self.y,0))],
                        size_agents, 0)
 
     def draw_history(self, screen):
