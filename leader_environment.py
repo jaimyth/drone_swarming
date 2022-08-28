@@ -22,7 +22,7 @@ x_pos = np.linspace(300, 600, n_grid)
 y_pos = np.linspace(300,600, n_grid)
 xx, yy = np.meshgrid(x_pos, y_pos)
 
-lead = Agent(environment=env, x = 200, y = 200, id=get_id())
+lead = Agent(environment=env, x = 200, y = 200, color=[255,255,255], id=get_id())
 env.leader = lead
 for i in range(n):
     ag = Agent_Flock(environment=env, x = xx.flatten()[i], y =yy.flatten()[i], id=get_id())
@@ -162,7 +162,7 @@ while run:
                 k_shape = max(k_shape, 0)
                 k_shape = min(k_shape,1)
                 shape_factors = (scale, n_shape, m_shape, k_shape)
-    ll = 50
+    ll = 100
     lead.v = np.array([-keys[pg.K_LEFT]*ll + keys[pg.K_RIGHT]*ll, keys[pg.K_DOWN]*ll - keys[pg.K_UP]*ll])
     pg.time.delay(int(constants.dt*2000))
     env.update_environment()
