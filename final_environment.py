@@ -13,19 +13,19 @@ env = Environment(width=width, height=height, bg_color=bg_color)
 env.update_environment()
 
 
-random.seed(2)
+random.seed(3)
 
 n = 30
-
-n_grid = np.ceil(np.sqrt(n))
-x_pos = np.linspace(300, 600, n_grid)
-y_pos = np.linspace(300,600, n_grid)
-xx, yy = np.meshgrid(x_pos, y_pos)
+x_pos = []
+y_pos = []
+for i in range(n):
+    x_pos.append(random.randint(200, 1000))
+    y_pos.append(random.randint(100, 600))
 
 lead = Agent(environment=env, x = 200, y = 200, color=[255,255,255], id=get_id())
 env.leader = lead
 for i in range(n):
-    ag = Agent_Flock(environment=env, x = xx.flatten()[i], y =yy.flatten()[i], id=get_id())
+    ag = Agent_Flock(environment=env, x = x_pos[i], y =y_pos[i], id=get_id())
     env.add_agent(ag)
 
 run =  True
@@ -66,17 +66,17 @@ while run:
     messages = [msg_cohese, msg_align, msg_distribute, msg_flower, msg_polygon, msg_middle]
     env.global_centroid = env.calculate_global_centroid()
     lead.update_position()
-    lead.draw()
+    #lead.draw()
     for i, ag in enumerate(env.agents):
         ag.final_v(shape_factors, cohese=cohese, avoid=True, align=align, follow=follow, center=center, flower=flower, shape_nmk=shape)
         ag.update_velocity()
         ag.update_position()
-        ag.gradient()
+        #ag.gradient()
         ag.draw()
         #ag.draw_history(env.screen)
     centroid = env.global_centroid# - env.agents[0].position()
-    pg.draw.circle(env.screen, (0, 0, 255), centroid.astype(int),
-                   5, 0)
+    #pg.draw.circle(env.screen, (0, 0, 255), centroid.astype(int),
+     #              5, 0)
     if draw and (shape or flower):
         if shape:
             r = scale * np.cos((2 * np.arcsin(k_shape) + np.pi * m_shape) / (2 * n_shape)) / (

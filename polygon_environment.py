@@ -67,7 +67,7 @@ while run:
     messages = [msg_cohese, msg_align, msg_distribute, msg_flower, msg_polygon, msg_middle]
     env.global_centroid = env.calculate_global_centroid()
     for i, ag in enumerate(env.agents):
-        ag.final_v(shape_factors, cohese=cohese, avoid=True, align=align, follow=False, center=center, flower=flower, shape=shape)
+        ag.final_v(shape_factors, cohese=cohese, avoid=True, align=align, follow=False, center=center, flower=flower, shape_nmk=shape)
         ag.update_velocity()
         ag.update_position()
         ag.gradient()

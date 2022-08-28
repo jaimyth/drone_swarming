@@ -116,7 +116,7 @@ class Agent_Flock(Agent):
             vect_t = vect_t/np.linalg.norm(vect_t)
         return vect_t
 
-    def shape(self, scale, n, m, k):
+    def shape_nmk(self, scale, n, m, k):
         centroid = self.environment.global_centroid
         vect_centroid = centroid - self.position()
         theta = np.arctan(vect_centroid[1] / vect_centroid[0])
@@ -162,7 +162,7 @@ class Agent_Flock(Agent):
         r,g,b = convert_to_rgb(minval, maxval, np.rad2deg(theta), colors)
         self.color = (r,g,b)
 
-    def final_v(self, shape_factors, cohese=False, avoid=True, align=False, follow=False, center=False, flower=False, shape=False):
+    def final_v(self, shape_factors, cohese=False, avoid=True, align=False, follow=False, center=False, flower=False, shape_nmk=False):
         from constants import w_wall, w_cohesion, w_avoidance, w_alignment, w_follow, w_distribute, w_center
         from constants import k, avoidance_radius
         delta_positions, delta_velocities = self.sense_neighbors(k)
@@ -175,12 +175,16 @@ class Agent_Flock(Agent):
             neighbors_cohese = delta_positions
             self.command_v = self.command_v + self.cohesion(neighbors_cohese)*w_cohesion
         if avoid:
-            neighbors_avoid = []
-            for i in delta_positions:
-                if np.linalg.norm(i) < avoidance_radius:
-                    neighbors_avoid.append(i)
-            if np.linalg.norm(delta_p_leader) < avoidance_radius:
-                neighbors_avoid.append(delta_p_leader)
+            distances = np.linalg.norm(delta_positions, axis =1)
+            indices = np.argwhere(distances<avoidance_radius)
+            neighbors_avoid = delta_positions[indices]
+            if neighbors_avoid.size:
+                shape = neighbors_avoid.shape
+                neighbors_avoid = neighbors_avoid.reshape(shape[0], shape[-1])
+                if np.linalg.norm(delta_p_leader) < avoidance_radius:
+                    neighbors_avoid = np.concatenate((neighbors_avoid, np.array([delta_p_leader])), axis=0)
+            elif np.linalg.norm(delta_p_leader) < avoidance_radius:
+                neighbors_avoid = delta_p_leader
             self.command_v = self.command_v + self.avoidance(neighbors_avoid)*w_avoidance
         if align:
             neighbors_align = delta_velocities
@@ -191,5 +195,5 @@ class Agent_Flock(Agent):
             self.command_v = self.command_v + self.center()*w_center
         if flower:
             self.command_v = self.command_v + self.flower(shape_factors[0], shape_factors[1]) * w_distribute
-        if shape:
-            self.command_v = self.command_v + self.shape(shape_factors[0], shape_factors[1], shape_factors[2], shape_factors[3])* w_distribute
+        if shape_nmk:
+            self.command_v = self.command_v + self.shape_nmk(shape_factors[0], shape_factors[1], shape_factors[2], shape_factors[3]) * w_distribute
