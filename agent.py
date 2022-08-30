@@ -31,8 +31,8 @@ class Agent:
     def update_position(self):
         self.x += self.dt * self.v[0]
         self.y += self.dt * self.v[1]
-        self.x_hist.append(self.x)
-        self.y_hist.append(self.y)
+        #self.x_hist.append(self.x)
+        #self.y_hist.append(self.y)
 
     def position(self):
         return np.array([self.x, self.y])

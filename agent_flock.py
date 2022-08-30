@@ -166,8 +166,9 @@ class Agent_Flock(Agent):
         from constants import w_wall, w_cohesion, w_avoidance, w_alignment, w_follow, w_distribute, w_center
         from constants import k, avoidance_radius
         delta_positions, delta_velocities = self.sense_neighbors(k)
-        delta_p_leader = self.environment.leader.position() - self.position()
-        delta_v_leader = self.environment.leader.v - self.v
+        delta_p_leader = np.array([500,500])
+        if self.environment.leader:
+            delta_p_leader = self.environment.leader.position() - self.position()
         self.command_v = 0
 
         self.command_v = self.command_v +self.avoid_wall()*w_wall

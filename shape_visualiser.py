@@ -1,21 +1,20 @@
 import pygame as pg
-import random
 import numpy as np
-from agent_flock import Agent_Flock
 from environment import Environment
 import constants
-from agent_id import *
+
+### File to visualise the shape rule ###
+
+#Note, keyboard inputs are different from final simulation tool version
+
+
+
 width, height = (1200, 700)
 bg_color = (255, 200, 180)
-
 env = Environment(width=width, height=height, bg_color=bg_color)
 env.update_environment()
-
 run =  True
-
 theta = np.deg2rad(np.linspace(0, 360, 2000))
-
-#r =  np.cos((2*np.arcsin(k)+np.pi*m)/(2*n)) / (np.cos( (2*np.arcsin(k*np.cos(n*theta))+np.pi*m) /(2*n)))
 
 k = 1
 n = 4
