@@ -6,16 +6,19 @@ from agent import Agent
 from environment import Environment
 import constants
 from agent_id import *
+
+### Number of Particles ###
+n = 16
+###########################
+
+
+### Main Code ###
 width, height = (1200, 700)
 bg_color = (255, 200, 180)
-
 env = Environment(width=width, height=height, bg_color=bg_color)
 env.update_environment()
-
-
 random.seed(3)
 
-n = 30
 x_pos = []
 y_pos = []
 for i in range(n):
@@ -60,18 +63,19 @@ while run:
     msg_align = f'[A]lign : {align}'
     msg_distribute = f'[S]hape : {shape}'
     msg_flower = f'[F]lower : {n_petal}'
-    msg_polygon = f'[P]olygon : {n_polygon}'
-    msg_middle = f'[M]iddle : {center}'
+    msg_middle = f'C[e]ntre : {center}'
+    msg_draw = f'[D]raw : {draw}'
 
-    messages = [msg_cohese, msg_align, msg_distribute, msg_flower, msg_polygon, msg_middle]
+    messages = [msg_cohese, msg_align, msg_distribute, msg_flower, msg_middle, msg_draw]
     env.global_centroid = env.calculate_global_centroid()
     lead.update_position()
-    #lead.draw()
+    lead.draw()
+    lead.draw_history(env.screen)
     for i, ag in enumerate(env.agents):
         ag.final_v(shape_factors, cohese=cohese, avoid=True, align=align, follow=follow, center=center, flower=flower, shape_nmk=shape)
         ag.update_velocity()
         ag.update_position()
-        #ag.gradient()
+        ag.gradient()
         ag.draw()
         #ag.draw_history(env.screen)
     centroid = env.global_centroid# - env.agents[0].position()
@@ -88,11 +92,12 @@ while run:
         y = r * np.sin(thetas) + centroid[1]
         points = np.array([x, y]).T
         pg.draw.polygon(env.screen, [0, 0, 0], points, 2)
-        msg_scale = f'Scale [DOWN_ARROW] [UP_ARROW] : {scale}'
-        msg_n = f'n [LEFT_ARROW] [RIGHT_ARROW] : {n_shape}'
-        msg_m = f'm [,] [.] : {m_shape}'
-        msg_k = f"k [;] ['] : {k_shape}"
-        messages = [msg_scale, msg_n, msg_m, msg_k]
+        msg_draw = f"[D]raw : {draw}"
+        msg_scale = f'Scale [-] [=] : {scale}'
+        msg_n = f'n [,] [.] : {n_shape}'
+        msg_m = f"m [;] ['] : {m_shape}"
+        msg_k = f"k [[] []] : {k_shape}"
+        messages = [msg_draw, msg_scale, msg_n, msg_m, msg_k]
         for i in range(len(messages)):
             env.render_text(messages[i], position=msg_positions[i])
 
@@ -101,32 +106,29 @@ while run:
     #env.draw_agents()
     for i in range(len(messages)):
         env.render_text(messages[i], position=msg_positions[i])
-    if n_polygon or n_petal:
-        env.render_text(f'Scale = {scale}', msg_positions[len(messages) + 1])
-
+    if not shape and not flower:
+        draw = False
     for event in pg.event.get():
         if event.type == pg.QUIT:
             run = False
         keys = pg.key.get_pressed()
         if event.type == pg.KEYDOWN:
-            if event.key == pg.K_SPACE:
-                draw = not draw
-                print(f'Draw {draw}')
+            if event.key == pg.K_d:
+                if flower or shape:
+                    draw = not draw
             if event.key == pg.K_r:
                 for i in env.agents:
                     i.reset_position()
             if event.key == pg.K_h:
                 for ag in env.agents:
                     ag.reset_history()
+                    lead.reset_history()
             if event.key == pg.K_c:
                 cohese = not cohese
-                print(f'Cohese {cohese}')
             if event.key == pg.K_a:
                 align = not align
-                print(f'Align {align}')
-            if event.key == pg.K_m:
+            if event.key == pg.K_e:
                 center = not center
-                print(f'Center {center}')
             if event.key == pg.K_l:
                 follow = not follow
             if event.key == pg.K_f:
@@ -166,3 +168,5 @@ while run:
     lead.v = np.array([-keys[pg.K_LEFT]*ll + keys[pg.K_RIGHT]*ll, keys[pg.K_DOWN]*ll - keys[pg.K_UP]*ll])
     pg.time.delay(int(constants.dt*2000))
     env.update_environment()
+
+### EOF ###
