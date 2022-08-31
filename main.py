@@ -8,8 +8,8 @@ import constants
 from agent_id import *
 
 """ Inputs """
-n = 16  #number of particles
-add_leader = True   # add leader or not
+n = 30  #number of particles
+add_leader = False   # add leader or not
 """"""""""""""""""""""""""""""""""""""""""
 
 
